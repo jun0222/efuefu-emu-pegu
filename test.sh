@@ -95,7 +95,17 @@ assert_duration_near "kurikaesu: 3回繰り返しで再生時間が3倍になる
 assert_duration_near "tsunageru: 2つの動画の合計時間になる" sample_tsunageta.mp4 4.5 0.5
 
 "$MAIN" onseika sample.mp4 >/dev/null 2>&1
-assert_no_stream "onseika: 映像ストリームが含まれない" sample.m4a video
+assert_file_exists "onseika: mp3ファイルが生成される" sample.mp3
+assert_no_stream "onseika: 映像ストリームが含まれない" sample.mp3 video
+
+"$MAIN" kiridasu 0:00~0:01 sample.mp3 >/dev/null 2>&1
+assert_duration_near "kiridasu: mp3を切り出してもmp3のまま" sample_kiridashi.mp3 1.0 0.3
+
+"$MAIN" kurikaesu 3 sample.mp3 >/dev/null 2>&1
+assert_duration_near "kurikaesu: mp3を繰り返してもmp3のまま" sample_x3.mp3 9.0 0.5
+
+"$MAIN" kizamu 1 sample.mp3 >/dev/null 2>&1
+assert_file_exists "kizamu: mp3の分割ファイルが生成される" sample_kizami_000.mp3
 
 "$MAIN" kizamu 1 sample.mp4 >/dev/null 2>&1
 assert_file_exists "kizamu: 分割ファイルが生成される" sample_kizami_000.mp4

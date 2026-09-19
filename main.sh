@@ -78,24 +78,44 @@ has_audio_stream() {
 	ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$1" 2>/dev/null | grep -q .
 }
 
+# 出力形式は明示指定がない限り、音声はmp3・動画はmp4に統一する
+is_audio_file() {
+	case "$1" in
+	*.mp3 | *.MP3 | *.m4a | *.M4A | *.wav | *.WAV | *.aac | *.AAC | *.flac | *.FLAC | *.ogg | *.OGG) return 0 ;;
+	*) return 1 ;;
+	esac
+}
+
+is_mp3_file() {
+	case "$1" in
+	*.mp3 | *.MP3) return 0 ;;
+	*) return 1 ;;
+	esac
+}
+
 cmd_chijimeru() {
 	[ $# -ge 1 ] || err "使い方: main.sh chijimeru <入力> [出力]"
 	input=$1
 	check_file "$input"
-	output=${2:-$(gen_output "$input" "1080" "")}
-
-	width=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$input")
-	if [ "$width" -le "$WIDTH_LIMIT" ]; then
-		ffmpeg -i "$input" -c copy -y "$output"
-		return
-	fi
 
 	case "$input" in
 	*.mov | *.MOV | *.mp4 | *.MP4)
-		ffmpeg -i "$input" -vf "scale=${WIDTH_LIMIT}:-2" -c:a copy -y "$output"
+		output=${2:-$(gen_output "$input" "1080" "mp4")}
+		width=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$input")
+		if [ "$width" -le "$WIDTH_LIMIT" ]; then
+			ffmpeg -i "$input" -c copy -y "$output"
+		else
+			ffmpeg -i "$input" -vf "scale=${WIDTH_LIMIT}:-2" -c:a copy -y "$output"
+		fi
 		;;
 	*.jpg | *.JPG | *.jpeg | *.JPEG | *.png | *.PNG)
-		ffmpeg -i "$input" -vf "scale=${WIDTH_LIMIT}:-1" -y "$output"
+		output=${2:-$(gen_output "$input" "1080" "")}
+		width=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$input")
+		if [ "$width" -le "$WIDTH_LIMIT" ]; then
+			ffmpeg -i "$input" -y "$output"
+		else
+			ffmpeg -i "$input" -vf "scale=${WIDTH_LIMIT}:-1" -y "$output"
+		fi
 		;;
 	*)
 		err "対応していない拡張子です: $input"
@@ -108,7 +128,7 @@ cmd_bayasoku() {
 	bairitsu=$1
 	input=$2
 	check_file "$input"
-	output=${3:-$(gen_output "$input" "x${bairitsu}" "")}
+	output=${3:-$(gen_output "$input" "x${bairitsu}" "mp4")}
 
 	if has_audio_stream "$input"; then
 		atempo=$(build_atempo "$bairitsu") || err "倍率が不正です: $bairitsu"
@@ -125,7 +145,6 @@ cmd_kiridasu() {
 	hani=$1
 	input=$2
 	check_file "$input"
-	output=${3:-$(gen_output "$input" "kiridashi" "")}
 
 	case "$hani" in
 	*~*)
@@ -141,7 +160,17 @@ cmd_kiridasu() {
 		;;
 	esac
 
-	ffmpeg -ss "$start" -to "$owari" -i "$input" -c copy -y "$output"
+	if is_audio_file "$input"; then
+		output=${3:-$(gen_output "$input" "kiridashi" "mp3")}
+		if is_mp3_file "$input"; then
+			ffmpeg -ss "$start" -to "$owari" -i "$input" -c copy -y "$output"
+		else
+			ffmpeg -ss "$start" -to "$owari" -i "$input" -c:a libmp3lame -q:a 2 -y "$output"
+		fi
+	else
+		output=${3:-$(gen_output "$input" "kiridashi" "mp4")}
+		ffmpeg -ss "$start" -to "$owari" -i "$input" -c copy -y "$output"
+	fi
 }
 
 cmd_gifka() {
@@ -174,7 +203,7 @@ cmd_sakujo() {
 
 	input=$1
 	check_file "$input"
-	output=${2:-$(gen_output "$input" "sakujo" "")}
+	output=${2:-$(gen_output "$input" "sakujo" "mp4")}
 
 	set -- -i "$input"
 	[ "$metadata_flag" -eq 1 ] && set -- "$@" -map_metadata -1
@@ -191,11 +220,20 @@ cmd_kurikaesu() {
 	kaisuu=$1
 	input=$2
 	check_file "$input"
-	output=${3:-$(gen_output "$input" "x${kaisuu}" "")}
-
 	[ "$kaisuu" -ge 1 ] 2>/dev/null || err "回数は1以上の整数で指定してください: $kaisuu"
 	loop=$((kaisuu - 1))
-	ffmpeg -stream_loop "$loop" -i "$input" -c copy -y "$output"
+
+	if is_audio_file "$input"; then
+		output=${3:-$(gen_output "$input" "x${kaisuu}" "mp3")}
+		if is_mp3_file "$input"; then
+			ffmpeg -stream_loop "$loop" -i "$input" -c copy -y "$output"
+		else
+			ffmpeg -stream_loop "$loop" -i "$input" -c:a libmp3lame -q:a 2 -y "$output"
+		fi
+	else
+		output=${3:-$(gen_output "$input" "x${kaisuu}" "mp4")}
+		ffmpeg -stream_loop "$loop" -i "$input" -c copy -y "$output"
+	fi
 }
 
 cmd_tsunageru() {
@@ -223,9 +261,9 @@ cmd_onseika() {
 	[ $# -ge 1 ] || err "使い方: main.sh onseika <入力> [出力]"
 	input=$1
 	check_file "$input"
-	output=${2:-$(gen_output "$input" "" "m4a")}
+	output=${2:-$(gen_output "$input" "" "mp3")}
 
-	ffmpeg -i "$input" -vn -y "$output"
+	ffmpeg -i "$input" -vn -c:a libmp3lame -q:a 2 -y "$output"
 }
 
 cmd_kizamu() {
@@ -236,12 +274,23 @@ cmd_kizamu() {
 
 	dir=$(dirname "$input")
 	base=$(basename "$input")
-	ext=${base##*.}
 	name=${base%.*}
 	prefix=${3:-"${dir}/${name}_kizami"}
 
-	ffmpeg -i "$input" -f segment -segment_time "$byou" -reset_timestamps 1 \
-		-c copy -y "${prefix}_%03d.${ext}"
+	if is_audio_file "$input"; then
+		ext=mp3
+		if is_mp3_file "$input"; then
+			ffmpeg -i "$input" -f segment -segment_time "$byou" -reset_timestamps 1 \
+				-c copy -y "${prefix}_%03d.${ext}"
+		else
+			ffmpeg -i "$input" -f segment -segment_time "$byou" -reset_timestamps 1 \
+				-c:a libmp3lame -q:a 2 -y "${prefix}_%03d.${ext}"
+		fi
+	else
+		ext=mp4
+		ffmpeg -i "$input" -f segment -segment_time "$byou" -reset_timestamps 1 \
+			-c copy -y "${prefix}_%03d.${ext}"
+	fi
 }
 
 cmd_asshuku() {
