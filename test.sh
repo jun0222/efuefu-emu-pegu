@@ -113,5 +113,9 @@ assert_file_exists "kizamu: 分割ファイルが生成される" sample_kizami_
 "$MAIN" asshuku sample.jpg >/dev/null 2>&1
 assert_file_exists "asshuku: 圧縮後の画像が生成される" sample_asshuku.jpg
 
+"$MAIN" asshuku sample.mp4 >/dev/null 2>&1
+assert_file_exists "asshuku: 圧縮後の動画が生成される" sample_asshuku.mp4
+assert_duration_near "asshuku: 圧縮後も再生時間が変わらない" sample_asshuku.mp4 3.0 0.3
+
 printf '\n%d件成功 / %d件失敗\n' "$pass_count" "$fail_count"
 [ "$fail_count" -eq 0 ]

@@ -47,7 +47,7 @@ eep <サブコマンド> [オプション] <入力ファイル...> [出力ファ
 | `tsunageru` | 複数ファイルを渡した順に連結 | `main.sh tsunageru a.mov b.mov out.mov` |
 | `onseika` | 動画から音声を抽出 | `main.sh onseika movie.mov` |
 | `kizamu` | n秒ごとに分割 | `main.sh kizamu 30 movie.mov` |
-| `asshuku` | 画像を画質を保ったまま圧縮 | `main.sh asshuku photo.jpg` |
+| `asshuku` | 動画/画像を画質を保ったまま圧縮 | `main.sh asshuku movie.mp4` |
 
 ## テスト
 

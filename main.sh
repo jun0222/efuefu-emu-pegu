@@ -57,7 +57,7 @@ usage() {
   tsunageru <入力...> <出力>              複数の動画/音声を渡した順番に繋げる
   onseika   <入力> [出力]                 動画から音声データを取り出す
   kizamu    <秒数> <入力> [出力プレフィックス]  動画/音声をn秒ごとに分割する
-  asshuku   <入力> [出力]                 画像を画質を保ったまま圧縮する
+  asshuku   <入力> [出力]                 動画/画像を画質を保ったまま圧縮する
 EOM
 }
 
@@ -297,14 +297,19 @@ cmd_asshuku() {
 	[ $# -ge 1 ] || err "使い方: main.sh asshuku <入力> [出力]"
 	input=$1
 	check_file "$input"
-	output=${2:-$(gen_output "$input" "asshuku" "")}
 
 	case "$input" in
 	*.jpg | *.JPG | *.jpeg | *.JPEG)
+		output=${2:-$(gen_output "$input" "asshuku" "")}
 		ffmpeg -i "$input" -qscale:v 4 -y "$output"
 		;;
 	*.png | *.PNG)
+		output=${2:-$(gen_output "$input" "asshuku" "")}
 		ffmpeg -i "$input" -compression_level 9 -y "$output"
+		;;
+	*.mov | *.MOV | *.mp4 | *.MP4)
+		output=${2:-$(gen_output "$input" "asshuku" "mp4")}
+		ffmpeg -i "$input" -c:v libx264 -crf 18 -preset slow -c:a copy -y "$output"
 		;;
 	*)
 		err "対応していない拡張子です: $input"
