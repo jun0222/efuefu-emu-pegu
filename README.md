@@ -39,7 +39,7 @@ eep <サブコマンド> [オプション] <入力ファイル...> [出力ファ
 | コマンド | 説明 | 例 |
 |---|---|---|
 | `chijimeru` | 動画/画像の幅を1080pxまでに縮小(縦横比維持) | `main.sh chijimeru movie.mov` |
-| `bayasoku` | 動画をn倍速にする | `main.sh bayasoku 2 movie.mov` |
+| `baisoku` | 動画をn倍速にする | `main.sh baisoku 2 movie.mov` |
 | `kiridasu` | 必要な範囲だけ切り出す | `main.sh kiridasu 11:01~12:32 movie.mov` |
 | `gifka` | 動画を画質を保ったままGIFに変換 | `main.sh gifka movie.mov` |
 | `sakujo` | メタデータ(`-m`)や音声(`-o`)を削除 | `main.sh sakujo -m -o movie.mov` |

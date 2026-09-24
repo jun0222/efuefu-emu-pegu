@@ -49,7 +49,7 @@ usage() {
 
 サブコマンド:
   chijimeru <入力> [出力]                 動画/画像の幅を1080pxまでに縮小する(縦横比維持)
-  bayasoku  <倍率> <入力> [出力]          動画をn倍速にする
+  baisoku   <倍率> <入力> [出力]          動画をn倍速にする
   kiridasu  <開始~終了> <入力> [出力]     動画/音声を必要な範囲だけ切り出す (例: 11:01~12:32)
   gifka     <入力> [出力]                 動画を画質を保ったままgifに変換する
   sakujo    [-m] [-o] <入力> [出力]       メタデータ(-m)や音声(-o)を削除する
@@ -123,8 +123,8 @@ cmd_chijimeru() {
 	esac
 }
 
-cmd_bayasoku() {
-	[ $# -ge 2 ] || err "使い方: main.sh bayasoku <倍率> <入力> [出力]"
+cmd_baisoku() {
+	[ $# -ge 2 ] || err "使い方: main.sh baisoku <倍率> <入力> [出力]"
 	bairitsu=$1
 	input=$2
 	check_file "$input"
@@ -336,7 +336,7 @@ main() {
 	shift
 	case "$subcommand" in
 	chijimeru) cmd_chijimeru "$@" ;;
-	bayasoku) cmd_bayasoku "$@" ;;
+	baisoku) cmd_baisoku "$@" ;;
 	kiridasu) cmd_kiridasu "$@" ;;
 	gifka) cmd_gifka "$@" ;;
 	sakujo) cmd_sakujo "$@" ;;

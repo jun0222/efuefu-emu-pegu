@@ -76,8 +76,8 @@ assert_width "chijimeru: 動画の幅が1080pxになる" sample_1080.mp4 1080
 "$MAIN" chijimeru sample.jpg >/dev/null 2>&1
 assert_width "chijimeru: 画像の幅が1080pxになる" sample_1080.jpg 1080
 
-"$MAIN" bayasoku 2 sample.mp4 >/dev/null 2>&1
-assert_duration_near "bayasoku: 2倍速で再生時間が半分になる" sample_x2.mp4 1.5 0.3
+"$MAIN" baisoku 2 sample.mp4 >/dev/null 2>&1
+assert_duration_near "baisoku: 2倍速で再生時間が半分になる" sample_x2.mp4 1.5 0.3
 
 "$MAIN" kiridasu 0:00~0:01 sample.mp4 >/dev/null 2>&1
 assert_duration_near "kiridasu: 指定範囲(1秒)だけ切り出される" sample_kiridashi.mp4 1.0 0.3
